@@ -6,5 +6,5 @@ async function prep() { const c = await caches.open(C); await c.addAll(['./', 'm
 self.addEventListener('install', e => e.waitUntil(prep().then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x.startsWith('iron-') && x !== C).map(x => caches.delete(x)))).then(() => self.clients.claim())));
 self.addEventListener('fetch', e => { const r = e.request; if (r.method !== 'GET') return; const u = new URL(r.url), own = u.origin === location.origin; if (!own && !OUT.includes(u.hostname)) return; if (own && u.pathname.includes('/test/')) return;
-  const keep = x => { if (x && (x.ok || x.type === 'opaque')) { const y = x.clone(); caches.open(C).then(c => c.put(r, y)); } return x; };
+  const keep = x => { if (x && (x.ok || x.type === 'opaque') && !(own && u.search)) { const y = x.clone(); caches.open(C).then(c => c.put(r, y)); } return x; };
   e.respondWith(own ? fetch(r).then(keep).catch(() => caches.match(r, { ignoreSearch: true }).then(x => x || (r.mode === 'navigate' ? caches.match('./') : Response.error()))) : caches.match(r, { ignoreVary: true }).then(x => x || fetch(r).then(keep))); });
